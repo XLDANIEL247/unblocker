@@ -280,19 +280,7 @@
       white-space: nowrap;
     }
 
-    .proxy-tabs {
-      display: flex; justify-content: center; gap: 12px; margin-bottom: 24px;
-    }
-    .proxy-tab {
-      padding: 8px 20px; border-radius: 8px;
-      background: var(--bg-card); color: var(--text-secondary);
-      border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600;
-      transition: all 0.2s;
-    }
-    .proxy-tab.active, .proxy-tab:hover {
-      border-color: var(--accent); color: var(--accent);
-      background: rgba(0, 229, 255, 0.06);
-    }
+    
 
     .proxy-frame-wrapper {
       position: relative; width: 100%; border-radius: var(--radius);
@@ -325,28 +313,75 @@
     .proxy-fallback.active { display: flex; }
     .proxy-fallback i { font-size: 2.5rem; margin-bottom: 12px; color: var(--accent-purple); }
 
-    .proxy-method-hint {
-      text-align: center; font-size: 0.82rem; color: var(--text-secondary);
-      margin-bottom: 24px; padding: 10px 16px;
-      background: rgba(0, 229, 255, 0.04); border: 1px solid var(--border);
-      border-radius: 8px; max-width: 700px; margin-left: auto; margin-right: auto;
-    }
-    .proxy-method-hint i { color: var(--accent); margin-right: 4px; }
-
-    .proxy-quick { text-align: center; margin-bottom: 28px; }
-    .proxy-quick-btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-    .proxy-quick-btn {
-      padding: 10px 18px; border-radius: 10px;
-      background: var(--bg-card); color: var(--text-secondary);
-      border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600;
+    /* Proxy status bar */
+    .proxy-status {
       display: flex; align-items: center; gap: 8px;
+      justify-content: center; margin-bottom: 16px;
+      padding: 8px 16px; font-size: 0.82rem;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; max-width: 700px; margin-left: auto; margin-right: auto;
+      margin-bottom: 20px;
+    }
+    .proxy-status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #555; flex-shrink: 0;
+    }
+    .proxy-status-dot.green { background: var(--accent-green); }
+    .proxy-status-dot.yellow { background: #ffcc00; animation: pulse-dot 1s infinite; }
+    .proxy-status-dot.red { background: #ff4444; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* Proxy bookmarks */
+    .proxy-bookmarks {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: center; margin-bottom: 24px;
+    }
+    .proxy-bm {
+      padding: 6px 14px; border-radius: 20px;
+      background: var(--bg-card); color: var(--text-secondary);
+      border: 1px solid var(--border); font-size: 0.78rem; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .proxy-bm:hover {
+      border-color: var(--accent); color: var(--text-primary);
+      background: rgba(0, 229, 255, 0.06);
+    }
+
+    /* Proxy frame toolbar */
+    .proxy-frame-toolbar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 12px; background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    .proxy-nav-btn {
+      background: var(--bg-card); border: 1px solid var(--border);
+      color: var(--text-secondary); width: 30px; height: 30px;
+      border-radius: 6px; display: flex; align-items: center;
+      justify-content: center; font-size: 0.8rem;
+      transition: all 0.15s;
+    }
+    .proxy-nav-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: #444; }
+    .proxy-frame-url {
+      flex: 1; font-size: 0.78rem; color: var(--text-secondary);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      padding: 0 8px;
+    }
+
+    /* Stealth hint */
+    .proxy-stealth-hint {
+      text-align: center; margin-top: 20px;
+      font-size: 0.82rem; color: var(--text-secondary);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      flex-wrap: wrap;
+    }
+    .proxy-stealth-btn {
+      padding: 6px 16px; border-radius: 8px;
+      background: rgba(0, 229, 255, 0.1); color: var(--accent);
+      border: 1px solid var(--accent); font-size: 0.82rem; font-weight: 600;
       transition: all 0.2s;
     }
-    .proxy-quick-btn:hover {
-      border-color: var(--accent); color: var(--accent);
-      background: rgba(0, 229, 255, 0.06);
-      transform: translateY(-2px);
-    }
+    .proxy-stealth-btn:hover { background: rgba(0, 229, 255, 0.2); }
 
     /* ============================================================
        FOOTER
@@ -443,47 +478,61 @@
        ============================================================ -->
   <section class="section" id="proxy">
     <h2 class="section-title">Proxy / Unblocker</h2>
-    <p class="section-subtitle">Browse any site using the methods below</p>
+    <p class="section-subtitle">Browse any site -- just type a URL or search term</p>
     <div class="glow-line"></div>
+
+    <!-- Status bar -->
+    <div class="proxy-status" id="proxyStatus">
+      <div class="proxy-status-dot" id="proxyStatusDot"></div>
+      <span id="proxyStatusText">Setting up proxy...</span>
+    </div>
 
     <!-- URL Input Bar -->
     <div class="proxy-bar">
-      <input class="proxy-input" id="proxyInput" type="text" placeholder="Enter a URL to browse (e.g. https://youtube.com)" />
+      <input class="proxy-input" id="proxyInput" type="text" placeholder="Search or enter URL (e.g. discord.com, youtube.com)" />
       <button class="proxy-go" id="proxyGo"><i class="fas fa-arrow-right"></i> Go</button>
     </div>
 
-    <!-- Method selector tabs -->
-    <div class="proxy-tabs">
-      <button class="proxy-tab active" data-proxy="aboutblank" title="Opens in a disguised about:blank tab"><i class="fas fa-eye-slash"></i> Stealth Tab</button>
-      <button class="proxy-tab" data-proxy="croxy" title="Route through CroxyProxy"><i class="fas fa-shield-halved"></i> CroxyProxy</button>
-      <button class="proxy-tab" data-proxy="embed" title="Try loading directly in an iframe below"><i class="fas fa-display"></i> Embed Here</button>
+    <!-- Quick bookmarks -->
+    <div class="proxy-bookmarks" id="proxyBookmarks">
+      <button class="proxy-bm" data-url="https://youtube.com"><i class="fab fa-youtube"></i> YouTube</button>
+      <button class="proxy-bm" data-url="https://discord.com"><i class="fab fa-discord"></i> Discord</button>
+      <button class="proxy-bm" data-url="https://roblox.com"><i class="fas fa-gamepad"></i> Roblox</button>
+      <button class="proxy-bm" data-url="https://spotify.com"><i class="fab fa-spotify"></i> Spotify</button>
+      <button class="proxy-bm" data-url="https://tiktok.com"><i class="fab fa-tiktok"></i> TikTok</button>
+      <button class="proxy-bm" data-url="https://reddit.com"><i class="fab fa-reddit"></i> Reddit</button>
+      <button class="proxy-bm" data-url="https://chatgpt.com"><i class="fas fa-robot"></i> ChatGPT</button>
+      <button class="proxy-bm" data-url="https://instagram.com"><i class="fab fa-instagram"></i> Instagram</button>
+      <button class="proxy-bm" data-url="https://netflix.com"><i class="fas fa-film"></i> Netflix</button>
+      <button class="proxy-bm" data-url="https://google.com"><i class="fab fa-google"></i> Google</button>
     </div>
 
-    <p class="proxy-method-hint" id="proxyMethodHint">
-      <i class="fas fa-info-circle"></i>
-      <strong>Stealth Tab</strong> &mdash; Opens the URL in a hidden about:blank window. Best for bypassing filters.
-    </p>
-
-    <!-- Quick-launch proxy buttons -->
-    <div class="proxy-quick">
-      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:12px;">Or quick-launch a proxy service:</p>
-      <div class="proxy-quick-btns">
-        <button class="proxy-quick-btn" data-url="https://www.croxyproxy.com/"><i class="fas fa-shield-halved"></i> CroxyProxy</button>
-        <button class="proxy-quick-btn" data-url="https://www.blockaway.net/"><i class="fas fa-lock-open"></i> BlockAway</button>
-        <button class="proxy-quick-btn" data-url="https://www.proxysite.com/"><i class="fas fa-globe"></i> ProxySite</button>
-        <button class="proxy-quick-btn" data-url="https://hide.me/en/proxy"><i class="fas fa-user-secret"></i> Hide.me</button>
+    <!-- Proxy iframe -->
+    <div class="proxy-frame-wrapper" id="proxyWrapper">
+      <div class="proxy-frame-toolbar">
+        <button class="proxy-nav-btn" id="proxyBack" title="Back"><i class="fas fa-chevron-left"></i></button>
+        <button class="proxy-nav-btn" id="proxyFwd" title="Forward"><i class="fas fa-chevron-right"></i></button>
+        <button class="proxy-nav-btn" id="proxyReload" title="Reload"><i class="fas fa-rotate-right"></i></button>
+        <button class="proxy-nav-btn" id="proxyHome" title="Home"><i class="fas fa-house"></i></button>
+        <span class="proxy-frame-url" id="proxyFrameUrl">Ready</span>
+        <button class="proxy-fs-btn" id="proxyFsBtn"><i class="fas fa-expand"></i></button>
       </div>
-    </div>
-
-    <!-- Embed frame (only shown for "Embed Here" mode) -->
-    <div class="proxy-frame-wrapper" id="proxyWrapper" style="display:none;">
-      <button class="proxy-fs-btn" id="proxyFsBtn"><i class="fas fa-expand"></i> Fullscreen</button>
-      <iframe id="proxyFrame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation allow-top-navigation-by-user-activation" allowfullscreen referrerpolicy="no-referrer"></iframe>
+      <iframe id="proxyFrame"
+        allow="autoplay; fullscreen; clipboard-write"
+        sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-downloads"
+      ></iframe>
       <div class="proxy-fallback" id="proxyFallback">
         <i class="fas fa-shield-halved"></i>
-        <p>This site blocked iframe embedding (<code>X-Frame-Options</code>). Use <strong>Stealth Tab</strong> or <strong>CroxyProxy</strong> method instead.</p>
-        <button class="btn btn-outline" id="proxyFallbackRetry" style="margin-top:12px;"><i class="fas fa-eye-slash"></i> Open in Stealth Tab</button>
+        <p id="proxyFallbackMsg">Proxy is loading...</p>
+        <button class="btn btn-outline" id="proxyFallbackRetry" style="margin-top:12px;display:none;"><i class="fas fa-rotate-right"></i> Retry</button>
       </div>
+    </div>
+
+    <!-- Stealth tab option -->
+    <div class="proxy-stealth-hint">
+      <i class="fas fa-eye-slash"></i>
+      Want the proxy in its own disguised tab?
+      <button class="proxy-stealth-btn" id="proxyStealthBtn">Open Stealth Tab</button>
     </div>
   </section>
 
@@ -497,6 +546,10 @@
   <!-- ============================================================
        JAVASCRIPT
        ============================================================ -->
+  <!-- Load Ultraviolet bundle from CDN, then local config -->
+  <script src="https://cdn.jsdelivr.net/npm/@titaniumnetwork-dev/ultraviolet@2.6.3/dist/uv.bundle.js"></script>
+  <script src="uv.config.js"></script>
+
   <script>
   document.addEventListener('DOMContentLoaded', () => {
 
@@ -635,148 +688,255 @@
     });
 
     /* ----------------------------------------------------------
-       PROXY SECTION
-       Uses three methods:
-       1. Stealth Tab (about:blank window) - most reliable
-       2. CroxyProxy URL rewriting
-       3. Direct iframe embed (least reliable)
+       PROXY SECTION - Ultraviolet-based unblocker
+       Uses UV service worker + bare servers, same approach
+       as the school unblocker in Math-notes.
        ---------------------------------------------------------- */
-    const proxyTabs = document.querySelectorAll('.proxy-tab');
     const proxyFrame = document.getElementById('proxyFrame');
     const proxyInput = document.getElementById('proxyInput');
     const proxyGo = document.getElementById('proxyGo');
     const proxyWrapper = document.getElementById('proxyWrapper');
     const proxyFsBtn = document.getElementById('proxyFsBtn');
     const proxyFallback = document.getElementById('proxyFallback');
-    const proxyMethodHint = document.getElementById('proxyMethodHint');
+    const proxyFallbackMsg = document.getElementById('proxyFallbackMsg');
     const proxyFallbackRetry = document.getElementById('proxyFallbackRetry');
+    const proxyStatusDot = document.getElementById('proxyStatusDot');
+    const proxyStatusText = document.getElementById('proxyStatusText');
+    const proxyFrameUrl = document.getElementById('proxyFrameUrl');
 
-    let currentProxyMode = 'aboutblank';
-    let lastProxyUrl = '';
+    let proxyReady = false;
+    let proxyNavHistory = [];
+    let proxyNavIndex = -1;
 
-    const METHOD_HINTS = {
-      aboutblank: '<i class="fas fa-info-circle"></i> <strong>Stealth Tab</strong> &mdash; Opens the URL in a hidden about:blank window. Best for bypassing filters.',
-      croxy: '<i class="fas fa-info-circle"></i> <strong>CroxyProxy</strong> &mdash; Routes traffic through CroxyProxy\'s servers. Good for blocked sites.',
-      embed: '<i class="fas fa-info-circle"></i> <strong>Embed Here</strong> &mdash; Loads the URL in an iframe on this page. Some sites may block this.'
-    };
+    /* Bare servers to try (tested in parallel, fastest wins) */
+    const BARE_SERVERS = [
+      'https://uv.holyubofficial.net/',
+      'https://bare.operatorequals.net/',
+      'https://uv-bare.vercel.app/',
+      'https://bare.rabloxy.site/',
+      'https://uv.northwestdata.net/',
+    ];
 
-    proxyTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        proxyTabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentProxyMode = tab.dataset.proxy;
-        proxyMethodHint.innerHTML = METHOD_HINTS[currentProxyMode] || '';
+    function setProxyStatus(color, msg) {
+      proxyStatusDot.className = 'proxy-status-dot ' + color;
+      proxyStatusText.textContent = msg;
+    }
 
-        /* Show/hide the embed frame */
-        if (currentProxyMode === 'embed') {
-          proxyWrapper.style.display = 'block';
-        } else {
-          proxyWrapper.style.display = 'none';
-          proxyFrame.src = '';
-          proxyFallback.classList.remove('active');
+    /* Find a working bare server by racing them */
+    async function findWorkingBare() {
+      const results = await Promise.allSettled(
+        BARE_SERVERS.map(async bare => {
+          const resp = await fetch(bare, {
+            method: 'HEAD',
+            signal: AbortSignal.timeout(3000)
+          });
+          if (resp.ok || resp.status === 400 || resp.status === 405) return bare;
+          throw new Error('bad status');
+        })
+      );
+      for (const r of results) {
+        if (r.status === 'fulfilled') return r.value;
+      }
+      return null;
+    }
+
+    /* Register Ultraviolet service worker */
+    async function setupProxySW() {
+      if (!('serviceWorker' in navigator)) {
+        setProxyStatus('red', 'Service workers not supported in this browser');
+        return;
+      }
+
+      setProxyStatus('yellow', 'Finding working proxy server...');
+
+      const workingBare = await findWorkingBare();
+      if (!workingBare) {
+        setProxyStatus('red', 'All proxy servers blocked. Try again later.');
+        proxyFallbackMsg.textContent = 'All bare servers are blocked by your network filter. Proxy cannot connect.';
+        proxyFallback.classList.add('active');
+        proxyFallbackRetry.style.display = 'inline-block';
+        return;
+      }
+
+      /* Update UV config with the working bare server */
+      self.__uv$config.bare = workingBare;
+
+      const shortBare = workingBare.replace('https://','').replace(/\/$/,'');
+      setProxyStatus('yellow', 'Connecting via ' + shortBare + '...');
+
+      try {
+        /* Unregister old SW if any */
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const r of registrations) {
+          if (r.scope.includes('/service')) {
+            await r.unregister();
+          }
         }
+
+        await navigator.serviceWorker.register('./uv.sw.js', {
+          scope: '/',
+          updateViaCache: 'none',
+        });
+
+        await navigator.serviceWorker.ready;
+        proxyReady = true;
+        setProxyStatus('green', 'Proxy ready via ' + shortBare);
+        proxyFallback.classList.remove('active');
+        proxyFrameUrl.textContent = 'Ready -- type a URL above';
+
+      } catch (err) {
+        console.error('SW setup failed:', err);
+        setProxyStatus('red', 'Setup error: ' + err.message);
+        proxyFallbackMsg.textContent = 'Service worker failed to register: ' + err.message;
+        proxyFallback.classList.add('active');
+        proxyFallbackRetry.style.display = 'inline-block';
+      }
+    }
+
+    /* Format URL or search query */
+    function formatProxyUrl(raw) {
+      raw = raw.trim();
+      if (!raw) return null;
+      if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+      if (/^[a-z0-9-]+\.[a-z]{2,}/i.test(raw) && !raw.includes(' ')) return 'https://' + raw;
+      return 'https://www.google.com/search?q=' + encodeURIComponent(raw);
+    }
+
+    /* Navigate the proxy to a URL */
+    function proxyNavigate(rawUrl) {
+      const url = formatProxyUrl(rawUrl || proxyInput.value);
+      if (!url) return;
+
+      if (!proxyReady) {
+        setProxyStatus('yellow', 'Proxy still loading, please wait...');
+        return;
+      }
+
+      proxyInput.value = url;
+      setProxyStatus('yellow', 'Loading...');
+      proxyFrameUrl.textContent = url;
+
+      const encoded = __uv$config.encodeUrl(url);
+      const proxied = __uv$config.prefix + encoded;
+
+      /* Track nav history */
+      proxyNavHistory = proxyNavHistory.slice(0, proxyNavIndex + 1);
+      proxyNavHistory.push(proxied);
+      proxyNavIndex = proxyNavHistory.length - 1;
+
+      proxyFallback.classList.remove('active');
+      proxyFrame.src = proxied;
+    }
+
+    proxyGo.addEventListener('click', () => proxyNavigate());
+    proxyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') proxyNavigate();
+    });
+
+    /* Bookmark buttons */
+    document.querySelectorAll('.proxy-bm').forEach(btn => {
+      btn.addEventListener('click', () => {
+        proxyInput.value = btn.dataset.url;
+        proxyNavigate(btn.dataset.url);
       });
     });
 
+    /* Frame navigation */
+    document.getElementById('proxyBack').addEventListener('click', () => {
+      if (proxyNavIndex > 0) {
+        proxyNavIndex--;
+        proxyFrame.src = proxyNavHistory[proxyNavIndex];
+        updateProxyUrlBar();
+      }
+    });
+    document.getElementById('proxyFwd').addEventListener('click', () => {
+      if (proxyNavIndex < proxyNavHistory.length - 1) {
+        proxyNavIndex++;
+        proxyFrame.src = proxyNavHistory[proxyNavIndex];
+        updateProxyUrlBar();
+      }
+    });
+    document.getElementById('proxyReload').addEventListener('click', () => {
+      try { proxyFrame.contentWindow.location.reload(); } catch(e) { proxyFrame.src = proxyFrame.src; }
+    });
+    document.getElementById('proxyHome').addEventListener('click', () => {
+      proxyFrame.src = '';
+      proxyInput.value = '';
+      proxyFrameUrl.textContent = 'Ready';
+      setProxyStatus('green', 'Proxy ready');
+    });
+
+    function updateProxyUrlBar() {
+      try {
+        const src = proxyFrame.src;
+        if (src.includes(__uv$config.prefix)) {
+          const enc = src.split(__uv$config.prefix)[1];
+          if (enc) {
+            const decoded = __uv$config.decodeUrl(enc);
+            proxyInput.value = decoded;
+            proxyFrameUrl.textContent = decoded;
+          }
+        }
+      } catch(e) {}
+    }
+
+    /* Frame load events */
+    proxyFrame.addEventListener('load', () => {
+      updateProxyUrlBar();
+      try {
+        const doc = proxyFrame.contentDocument;
+        if (doc && doc.title && doc.title.toLowerCase().includes('blocked')) {
+          setProxyStatus('red', 'Site blocked by network filter');
+        } else {
+          setProxyStatus('green', 'Loaded');
+        }
+      } catch(e) {
+        setProxyStatus('green', 'Loaded');
+      }
+    });
+
+    proxyFrame.addEventListener('error', () => {
+      setProxyStatus('red', 'Failed to load');
+    });
+
+    /* Retry button */
+    proxyFallbackRetry.addEventListener('click', () => {
+      proxyFallback.classList.remove('active');
+      proxyFallbackRetry.style.display = 'none';
+      setupProxySW();
+    });
+
+    /* Fullscreen toggle */
+    proxyFsBtn.addEventListener('click', () => {
+      proxyWrapper.classList.toggle('fullscreen');
+      const isFs = proxyWrapper.classList.contains('fullscreen');
+      proxyFsBtn.innerHTML = isFs
+        ? '<i class="fas fa-compress"></i>'
+        : '<i class="fas fa-expand"></i>';
+    });
+
     /**
-     * Opens a URL in an about:blank stealth window.
-     * The browser tab shows "about:blank" with no traceable URL.
+     * Opens proxy in an about:blank stealth window.
      */
     function openInStealthTab(url) {
       const win = window.open('about:blank', '_blank');
-      if (!win) {
-        alert('Pop-up blocked! Allow pop-ups for this site and try again.');
-        return;
-      }
+      if (!win) { alert('Pop-up blocked! Allow pop-ups for this site.'); return; }
       win.document.write(
         '<!DOCTYPE html><html><head>' +
         '<title>Google Docs</title>' +
         '<link rel="icon" href="https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico">' +
         '<style>*{margin:0;padding:0}body{overflow:hidden}iframe{width:100vw;height:100vh;border:none}</style>' +
         '</head><body>' +
-        '<iframe src="' + url.replace(/"/g, '&quot;') + '" ' +
-        'sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation allow-top-navigation-by-user-activation" ' +
-        'allowfullscreen referrerpolicy="no-referrer"></iframe>' +
+        '<iframe src="' + window.location.href.replace(/[^/]*$/, '') + '" allowfullscreen></iframe>' +
         '</body></html>'
       );
       win.document.close();
     }
 
-    /**
-     * Builds a CroxyProxy URL for the given target.
-     */
-    function buildCroxyUrl(url) {
-      return 'https://www.croxyproxy.com/go.php?u=' + encodeURIComponent(btoa(url)) + '&b=1';
-    }
+    document.getElementById('proxyStealthBtn').addEventListener('click', () => openInStealthTab());
 
-    /**
-     * Main proxy navigation handler.
-     */
-    function navigateProxy(url) {
-      if (!url) return;
-      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-      lastProxyUrl = url;
-
-      switch (currentProxyMode) {
-        case 'aboutblank':
-          openInStealthTab(url);
-          break;
-
-        case 'croxy':
-          /* Open CroxyProxy with the target URL in a stealth tab */
-          openInStealthTab(buildCroxyUrl(url));
-          break;
-
-        case 'embed':
-          /* Try loading in the on-page iframe */
-          proxyFallback.classList.remove('active');
-          proxyWrapper.style.display = 'block';
-          proxyFrame.src = url;
-          /* Detect load failure with a timeout heuristic */
-          let loaded = false;
-          const onLoad = () => { loaded = true; };
-          proxyFrame.addEventListener('load', onLoad, { once: true });
-          setTimeout(() => {
-            proxyFrame.removeEventListener('load', onLoad);
-            /* Check if iframe is accessible (same-origin check will throw for blocked) */
-            try {
-              const test = proxyFrame.contentDocument || proxyFrame.contentWindow.document;
-              if (test && test.body && test.body.innerHTML === '') {
-                proxyFallback.classList.add('active');
-              }
-            } catch (e) {
-              /* Cross-origin means it loaded (even if content is restricted) */
-            }
-          }, 5000);
-          break;
-      }
-    }
-
-    proxyGo.addEventListener('click', () => navigateProxy(proxyInput.value.trim()));
-    proxyInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') navigateProxy(proxyInput.value.trim());
-    });
-
-    /* Quick-launch proxy buttons */
-    document.querySelectorAll('.proxy-quick-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        openInStealthTab(btn.dataset.url);
-      });
-    });
-
-    /* Fallback retry: open in stealth tab instead */
-    proxyFallbackRetry.addEventListener('click', () => {
-      if (lastProxyUrl) openInStealthTab(lastProxyUrl);
-    });
-
-    /* Fullscreen toggle for embed mode */
-    proxyFsBtn.addEventListener('click', () => {
-      proxyWrapper.classList.toggle('fullscreen');
-      const isFs = proxyWrapper.classList.contains('fullscreen');
-      proxyFsBtn.innerHTML = isFs
-        ? '<i class="fas fa-compress"></i> Exit'
-        : '<i class="fas fa-expand"></i> Fullscreen';
-    });
+    /* Initialize the proxy on page load */
+    setupProxySW();
 
     /* ----------------------------------------------------------
        TAB CLOAKING / DISGUISE

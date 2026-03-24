@@ -325,6 +325,29 @@
     .proxy-fallback.active { display: flex; }
     .proxy-fallback i { font-size: 2.5rem; margin-bottom: 12px; color: var(--accent-purple); }
 
+    .proxy-method-hint {
+      text-align: center; font-size: 0.82rem; color: var(--text-secondary);
+      margin-bottom: 24px; padding: 10px 16px;
+      background: rgba(0, 229, 255, 0.04); border: 1px solid var(--border);
+      border-radius: 8px; max-width: 700px; margin-left: auto; margin-right: auto;
+    }
+    .proxy-method-hint i { color: var(--accent); margin-right: 4px; }
+
+    .proxy-quick { text-align: center; margin-bottom: 28px; }
+    .proxy-quick-btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    .proxy-quick-btn {
+      padding: 10px 18px; border-radius: 10px;
+      background: var(--bg-card); color: var(--text-secondary);
+      border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+      transition: all 0.2s;
+    }
+    .proxy-quick-btn:hover {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(0, 229, 255, 0.06);
+      transform: translateY(-2px);
+    }
+
     /* ============================================================
        FOOTER
        ============================================================ */
@@ -420,26 +443,46 @@
        ============================================================ -->
   <section class="section" id="proxy">
     <h2 class="section-title">Proxy / Unblocker</h2>
-    <p class="section-subtitle">Browse freely via CroxyProxy or load any URL in an iframe</p>
+    <p class="section-subtitle">Browse any site using the methods below</p>
     <div class="glow-line"></div>
 
+    <!-- URL Input Bar -->
+    <div class="proxy-bar">
+      <input class="proxy-input" id="proxyInput" type="text" placeholder="Enter a URL to browse (e.g. https://youtube.com)" />
+      <button class="proxy-go" id="proxyGo"><i class="fas fa-arrow-right"></i> Go</button>
+    </div>
+
+    <!-- Method selector tabs -->
     <div class="proxy-tabs">
-      <button class="proxy-tab active" data-proxy="croxy">CroxyProxy</button>
-      <button class="proxy-tab" data-proxy="iframe">Direct URL</button>
+      <button class="proxy-tab active" data-proxy="aboutblank" title="Opens in a disguised about:blank tab"><i class="fas fa-eye-slash"></i> Stealth Tab</button>
+      <button class="proxy-tab" data-proxy="croxy" title="Route through CroxyProxy"><i class="fas fa-shield-halved"></i> CroxyProxy</button>
+      <button class="proxy-tab" data-proxy="embed" title="Try loading directly in an iframe below"><i class="fas fa-display"></i> Embed Here</button>
     </div>
 
-    <div class="proxy-bar" id="proxyUrlBar" style="display:none;">
-      <input class="proxy-input" id="proxyInput" type="text" placeholder="Enter URL (e.g. https://example.com)" />
-      <button class="proxy-go" id="proxyGo">Go</button>
+    <p class="proxy-method-hint" id="proxyMethodHint">
+      <i class="fas fa-info-circle"></i>
+      <strong>Stealth Tab</strong> &mdash; Opens the URL in a hidden about:blank window. Best for bypassing filters.
+    </p>
+
+    <!-- Quick-launch proxy buttons -->
+    <div class="proxy-quick">
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:12px;">Or quick-launch a proxy service:</p>
+      <div class="proxy-quick-btns">
+        <button class="proxy-quick-btn" data-url="https://www.croxyproxy.com/"><i class="fas fa-shield-halved"></i> CroxyProxy</button>
+        <button class="proxy-quick-btn" data-url="https://www.blockaway.net/"><i class="fas fa-lock-open"></i> BlockAway</button>
+        <button class="proxy-quick-btn" data-url="https://www.proxysite.com/"><i class="fas fa-globe"></i> ProxySite</button>
+        <button class="proxy-quick-btn" data-url="https://hide.me/en/proxy"><i class="fas fa-user-secret"></i> Hide.me</button>
+      </div>
     </div>
 
-    <div class="proxy-frame-wrapper" id="proxyWrapper">
+    <!-- Embed frame (only shown for "Embed Here" mode) -->
+    <div class="proxy-frame-wrapper" id="proxyWrapper" style="display:none;">
       <button class="proxy-fs-btn" id="proxyFsBtn"><i class="fas fa-expand"></i> Fullscreen</button>
-      <iframe id="proxyFrame" src="https://www.croxyproxy.com/" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation" allowfullscreen></iframe>
+      <iframe id="proxyFrame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation allow-top-navigation-by-user-activation" allowfullscreen referrerpolicy="no-referrer"></iframe>
       <div class="proxy-fallback" id="proxyFallback">
         <i class="fas fa-shield-halved"></i>
-        <p>This site blocked iframe embedding (<code>X-Frame-Options</code>). Try using CroxyProxy instead, or open the URL in a new tab.</p>
-        <a id="proxyFallbackLink" href="#" target="_blank" class="btn btn-outline" style="margin-top:16px;">Open in New Tab</a>
+        <p>This site blocked iframe embedding (<code>X-Frame-Options</code>). Use <strong>Stealth Tab</strong> or <strong>CroxyProxy</strong> method instead.</p>
+        <button class="btn btn-outline" id="proxyFallbackRetry" style="margin-top:12px;"><i class="fas fa-eye-slash"></i> Open in Stealth Tab</button>
       </div>
     </div>
   </section>
@@ -593,61 +636,140 @@
 
     /* ----------------------------------------------------------
        PROXY SECTION
+       Uses three methods:
+       1. Stealth Tab (about:blank window) - most reliable
+       2. CroxyProxy URL rewriting
+       3. Direct iframe embed (least reliable)
        ---------------------------------------------------------- */
     const proxyTabs = document.querySelectorAll('.proxy-tab');
-    const proxyUrlBar = document.getElementById('proxyUrlBar');
     const proxyFrame = document.getElementById('proxyFrame');
     const proxyInput = document.getElementById('proxyInput');
     const proxyGo = document.getElementById('proxyGo');
     const proxyWrapper = document.getElementById('proxyWrapper');
     const proxyFsBtn = document.getElementById('proxyFsBtn');
     const proxyFallback = document.getElementById('proxyFallback');
-    const proxyFallbackLink = document.getElementById('proxyFallbackLink');
+    const proxyMethodHint = document.getElementById('proxyMethodHint');
+    const proxyFallbackRetry = document.getElementById('proxyFallbackRetry');
 
-    let currentProxyMode = 'croxy';
+    let currentProxyMode = 'aboutblank';
+    let lastProxyUrl = '';
+
+    const METHOD_HINTS = {
+      aboutblank: '<i class="fas fa-info-circle"></i> <strong>Stealth Tab</strong> &mdash; Opens the URL in a hidden about:blank window. Best for bypassing filters.',
+      croxy: '<i class="fas fa-info-circle"></i> <strong>CroxyProxy</strong> &mdash; Routes traffic through CroxyProxy\'s servers. Good for blocked sites.',
+      embed: '<i class="fas fa-info-circle"></i> <strong>Embed Here</strong> &mdash; Loads the URL in an iframe on this page. Some sites may block this.'
+    };
 
     proxyTabs.forEach(tab => {
       tab.addEventListener('click', () => {
         proxyTabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         currentProxyMode = tab.dataset.proxy;
-        proxyFallback.classList.remove('active');
+        proxyMethodHint.innerHTML = METHOD_HINTS[currentProxyMode] || '';
 
-        if (currentProxyMode === 'croxy') {
-          proxyUrlBar.style.display = 'none';
-          proxyFrame.src = 'https://www.croxyproxy.com/';
+        /* Show/hide the embed frame */
+        if (currentProxyMode === 'embed') {
+          proxyWrapper.style.display = 'block';
         } else {
-          proxyUrlBar.style.display = 'flex';
+          proxyWrapper.style.display = 'none';
           proxyFrame.src = '';
+          proxyFallback.classList.remove('active');
         }
       });
     });
 
-    function loadProxyUrl() {
-      let url = proxyInput.value.trim();
-      if (!url) return;
-      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-      proxyFallback.classList.remove('active');
-      proxyFallbackLink.href = url;
-      proxyFrame.src = url;
-
-      /* Detect X-Frame-Options block via load timeout heuristic */
-      const timeout = setTimeout(() => {
-        /* If we get here without the iframe navigating, show fallback */
-      }, 8000);
-      proxyFrame.onload = () => clearTimeout(timeout);
-      proxyFrame.onerror = () => {
-        clearTimeout(timeout);
-        proxyFallback.classList.add('active');
-      };
+    /**
+     * Opens a URL in an about:blank stealth window.
+     * The browser tab shows "about:blank" with no traceable URL.
+     */
+    function openInStealthTab(url) {
+      const win = window.open('about:blank', '_blank');
+      if (!win) {
+        alert('Pop-up blocked! Allow pop-ups for this site and try again.');
+        return;
+      }
+      win.document.write(
+        '<!DOCTYPE html><html><head>' +
+        '<title>Google Docs</title>' +
+        '<link rel="icon" href="https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico">' +
+        '<style>*{margin:0;padding:0}body{overflow:hidden}iframe{width:100vw;height:100vh;border:none}</style>' +
+        '</head><body>' +
+        '<iframe src="' + url.replace(/"/g, '&quot;') + '" ' +
+        'sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation allow-top-navigation-by-user-activation" ' +
+        'allowfullscreen referrerpolicy="no-referrer"></iframe>' +
+        '</body></html>'
+      );
+      win.document.close();
     }
 
-    proxyGo.addEventListener('click', loadProxyUrl);
+    /**
+     * Builds a CroxyProxy URL for the given target.
+     */
+    function buildCroxyUrl(url) {
+      return 'https://www.croxyproxy.com/go.php?u=' + encodeURIComponent(btoa(url)) + '&b=1';
+    }
+
+    /**
+     * Main proxy navigation handler.
+     */
+    function navigateProxy(url) {
+      if (!url) return;
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      lastProxyUrl = url;
+
+      switch (currentProxyMode) {
+        case 'aboutblank':
+          openInStealthTab(url);
+          break;
+
+        case 'croxy':
+          /* Open CroxyProxy with the target URL in a stealth tab */
+          openInStealthTab(buildCroxyUrl(url));
+          break;
+
+        case 'embed':
+          /* Try loading in the on-page iframe */
+          proxyFallback.classList.remove('active');
+          proxyWrapper.style.display = 'block';
+          proxyFrame.src = url;
+          /* Detect load failure with a timeout heuristic */
+          let loaded = false;
+          const onLoad = () => { loaded = true; };
+          proxyFrame.addEventListener('load', onLoad, { once: true });
+          setTimeout(() => {
+            proxyFrame.removeEventListener('load', onLoad);
+            /* Check if iframe is accessible (same-origin check will throw for blocked) */
+            try {
+              const test = proxyFrame.contentDocument || proxyFrame.contentWindow.document;
+              if (test && test.body && test.body.innerHTML === '') {
+                proxyFallback.classList.add('active');
+              }
+            } catch (e) {
+              /* Cross-origin means it loaded (even if content is restricted) */
+            }
+          }, 5000);
+          break;
+      }
+    }
+
+    proxyGo.addEventListener('click', () => navigateProxy(proxyInput.value.trim()));
     proxyInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') loadProxyUrl();
+      if (e.key === 'Enter') navigateProxy(proxyInput.value.trim());
     });
 
-    /* Fullscreen toggle */
+    /* Quick-launch proxy buttons */
+    document.querySelectorAll('.proxy-quick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openInStealthTab(btn.dataset.url);
+      });
+    });
+
+    /* Fallback retry: open in stealth tab instead */
+    proxyFallbackRetry.addEventListener('click', () => {
+      if (lastProxyUrl) openInStealthTab(lastProxyUrl);
+    });
+
+    /* Fullscreen toggle for embed mode */
     proxyFsBtn.addEventListener('click', () => {
       proxyWrapper.classList.toggle('fullscreen');
       const isFs = proxyWrapper.classList.contains('fullscreen');
